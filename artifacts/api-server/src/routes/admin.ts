@@ -195,8 +195,11 @@ adminRouter.post("/upload", upload.single("file"), async (req: Request, res: Res
     .returning();
 
   // Kick off the Python pipeline asynchronously
+  const projectDir = path.resolve(process.cwd(), "../../project");
+  const scriptPath = path.join(projectDir, "run_from_pages.py");
+
   const pythonArgs = [
-    path.resolve(process.cwd(), "../../project/run_from_pages.py"),
+    scriptPath,
     "--pdf", req.file.path,
     "--start_page", "1",
   ];
@@ -205,9 +208,34 @@ adminRouter.post("/upload", upload.single("file"), async (req: Request, res: Res
 
   const child = spawn("python3", pythonArgs, {
     detached: true,
-    stdio: "ignore",
-    cwd: path.resolve(process.cwd(), "../../project"),
+    stdio: ["ignore", "ignore", "ignore"],
+    cwd: projectDir,
+    env: { ...process.env },
   });
+
+  // Prevent unhandled error from crashing the server
+  child.on("error", async (err) => {
+    req.log.error({ err, bankId: bank.id }, "Python pipeline spawn failed");
+    await db
+      .update(questionBanksTable)
+      .set({ status: "failed" })
+      .where(eq(questionBanksTable.id, bank.id));
+  });
+
+  child.on("exit", async (code) => {
+    if (code === 0) {
+      await db
+        .update(questionBanksTable)
+        .set({ status: "ready" })
+        .where(eq(questionBanksTable.id, bank.id));
+    } else if (code !== null) {
+      await db
+        .update(questionBanksTable)
+        .set({ status: "failed" })
+        .where(eq(questionBanksTable.id, bank.id));
+    }
+  });
+
   child.unref();
 
   res.status(201).json({
