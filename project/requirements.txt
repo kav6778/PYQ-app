@@ -1,0 +1,31 @@
+# Core pipeline dependencies
+pdf2image==1.17.0
+pytesseract==0.3.13
+Pillow==10.4.0
+numpy>=1.24.0
+
+# Deep learning runtime
+torch>=2.0.0
+torchvision>=0.15.0
+
+# Layout detection
+layoutparser==0.3.4
+
+# LaTeX OCR
+pix2tex>=0.1.2
+
+# System dependencies (install via OS package manager):
+#   - Tesseract OCR:  sudo apt install tesseract-ocr   (Debian/Ubuntu)
+#                     brew install tesseract             (macOS)
+#   - Poppler:        sudo apt install poppler-utils     (Debian/Ubuntu)
+#                     brew install poppler               (macOS)
+
+# Detectron2 — must be installed manually after torch.
+# It requires compilation from source and is not available on PyPI.
+# Install with:
+#   pip install --no-build-isolation \
+#       'git+https://github.com/facebookresearch/detectron2.git'
+#
+# Or use the official pre-built CPU wheel (for torch 2.0):
+#   pip install detectron2 \
+#       -f https://dl.fbaipublicfiles.com/detectron2/wheels/cpu/torch2.0/index.html

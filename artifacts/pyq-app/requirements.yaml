@@ -1,0 +1,19 @@
+packages:
+  "framer-motion": "For premium page transitions, list animations, and interactive micro-interactions"
+  "katex": "Required for rendering mathematical formulas"
+  "react-katex": "React components for KaTeX to render math_latex fields"
+  "clsx": "Utility for constructing className strings conditionally"
+  "tailwind-merge": "Utility to merge Tailwind classes without style conflicts"
+  "lucide-react": "Beautiful icons for the UI"
+
+images:
+  - path: "artifacts/pyq-app/public/images/hero-bg.png"
+    description: "Dark, elegant, abstract geometric background with subtle glowing lines in deep purple and electric blue, conveying a sense of advanced technology, learning, and intelligence. Minimalist and professional."
+    aspect_ratio: "16:9"
+  - path: "artifacts/pyq-app/public/images/empty-state.png"
+    description: "A sleek, dark-themed 3D illustration of a floating open book or holographic document with glowing particles, representing a search with no results or an empty database. High quality, premium look."
+    aspect_ratio: "1:1"
+
+notes:
+  - The API schema does not provide a 'correct_answer' field. For the Quiz UI, we will simulate the selection state to demonstrate the UI capabilities, acting as a self-assessment tool.
+  - The app enforces a "Dark Mode Professional" aesthetic as requested.
