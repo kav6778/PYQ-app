@@ -8,11 +8,14 @@ export const questionBanksTable = pgTable("question_banks", {
   examId: integer("exam_id").notNull().references(() => examsTable.id),
   paperId: integer("paper_id").notNull().references(() => papersTable.id),
   pdfName: text("pdf_name").notNull(),
+  pdfStem: text("pdf_stem"),
   year: integer("year").notNull(),
-  status: text("status").notNull().default("pending"), // pending | processing | ready | approved
+  status: text("status").notNull().default("pending"), // pending | processing | ready | approved | failed
   totalPages: integer("total_pages"),
   totalQuestions: integer("total_questions"),
   pdfPath: text("pdf_path"),
+  oddOnly: integer("odd_only").notNull().default(0), // 0|1
+  skipCovers: integer("skip_covers").notNull().default(0), // 0|1
   createdAt: timestamp("created_at").defaultNow(),
   approvedAt: timestamp("approved_at"),
 });
