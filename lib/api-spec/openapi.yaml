@@ -1,0 +1,635 @@
+openapi: 3.1.0
+info:
+  title: Api
+  version: 0.2.0
+  description: PYQ Question Extraction & Review API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+  - name: auth
+  - name: exams
+  - name: admin
+  - name: questions
+
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Log in with username and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Clear auth cookie
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user profile
+      responses:
+        "200":
+          description: Profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /exams:
+    get:
+      operationId: listExams
+      tags: [exams]
+      summary: List all exams
+      responses:
+        "200":
+          description: Exams list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExamListResponse"
+
+  /exams/{examId}/papers:
+    get:
+      operationId: listPapers
+      tags: [exams]
+      summary: List papers for an exam
+      parameters:
+        - name: examId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Papers list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaperListResponse"
+
+  /exams/{examId}/papers/{paperId}/subjects:
+    get:
+      operationId: listSubjects
+      tags: [exams]
+      summary: List subjects available for an exam+paper combination
+      parameters:
+        - name: examId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: paperId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Subject+topic tree
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubjectListResponse"
+
+  /admin/banks:
+    get:
+      operationId: listBanks
+      tags: [admin]
+      summary: List all question banks (admin only)
+      responses:
+        "200":
+          description: Banks list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BankListResponse"
+
+  /admin/banks/{bankId}:
+    get:
+      operationId: getBank
+      tags: [admin]
+      summary: Get a question bank with its pages (admin only)
+      parameters:
+        - name: bankId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Bank detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BankDetail"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /admin/banks/{bankId}/approve:
+    post:
+      operationId: approveBank
+      tags: [admin]
+      summary: Approve a question bank and import its questions (admin only)
+      parameters:
+        - name: bankId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Approved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /admin/upload:
+    post:
+      operationId: uploadPdf
+      tags: [admin]
+      summary: Upload a PDF for processing (admin only)
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                examId:
+                  type: integer
+                paperId:
+                  type: integer
+                year:
+                  type: integer
+              required: [file, examId, paperId, year]
+      responses:
+        "201":
+          description: Upload started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BankCreatedResponse"
+
+  /questions:
+    get:
+      operationId: listQuestions
+      tags: [questions]
+      summary: List questions with filters
+      parameters:
+        - name: examId
+          in: query
+          schema:
+            type: integer
+        - name: paperId
+          in: query
+          schema:
+            type: integer
+        - name: subject
+          in: query
+          schema:
+            type: string
+        - name: topic
+          in: query
+          schema:
+            type: string
+        - name: yearStart
+          in: query
+          schema:
+            type: integer
+        - name: yearEnd
+          in: query
+          schema:
+            type: integer
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: Questions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuestionListResponse"
+
+  /questions/stats:
+    get:
+      operationId: getQuestionStats
+      tags: [questions]
+      summary: Question bank stats
+      parameters:
+        - name: examId
+          in: query
+          schema:
+            type: integer
+        - name: paperId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuestionStats"
+
+  /questions/{questionId}:
+    get:
+      operationId: getQuestion
+      tags: [questions]
+      summary: Get a single question
+      parameters:
+        - name: questionId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Question
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuestionDetail"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required: [status]
+
+    LoginRequest:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+      required: [username, password]
+
+    AuthResponse:
+      type: object
+      properties:
+        user:
+          $ref: "#/components/schemas/UserProfile"
+        token:
+          type: string
+      required: [user, token]
+
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        role:
+          type: string
+      required: [id, username, role]
+
+    ExamListResponse:
+      type: object
+      properties:
+        exams:
+          type: array
+          items:
+            $ref: "#/components/schemas/Exam"
+      required: [exams]
+
+    Exam:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        slug:
+          type: string
+      required: [id, name, slug]
+
+    PaperListResponse:
+      type: object
+      properties:
+        papers:
+          type: array
+          items:
+            $ref: "#/components/schemas/Paper"
+      required: [papers]
+
+    Paper:
+      type: object
+      properties:
+        id:
+          type: integer
+        examId:
+          type: integer
+        name:
+          type: string
+        slug:
+          type: string
+      required: [id, examId, name, slug]
+
+    SubjectListResponse:
+      type: object
+      properties:
+        subjects:
+          type: array
+          items:
+            $ref: "#/components/schemas/SubjectWithTopics"
+      required: [subjects]
+
+    SubjectWithTopics:
+      type: object
+      properties:
+        subject:
+          type: string
+        count:
+          type: integer
+        topics:
+          type: array
+          items:
+            $ref: "#/components/schemas/TopicCount"
+      required: [subject, count, topics]
+
+    TopicCount:
+      type: object
+      properties:
+        topic:
+          type: string
+        count:
+          type: integer
+      required: [topic, count]
+
+    BankListResponse:
+      type: object
+      properties:
+        banks:
+          type: array
+          items:
+            $ref: "#/components/schemas/BankSummary"
+      required: [banks]
+
+    BankSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+        examId:
+          type: integer
+        paperId:
+          type: integer
+        pdfName:
+          type: string
+        year:
+          type: integer
+        status:
+          type: string
+        totalPages:
+          type: integer
+          nullable: true
+        totalQuestions:
+          type: integer
+          nullable: true
+        createdAt:
+          type: string
+          nullable: true
+      required: [id, examId, paperId, pdfName, year, status]
+
+    BankDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+        examId:
+          type: integer
+        paperId:
+          type: integer
+        pdfName:
+          type: string
+        year:
+          type: integer
+        status:
+          type: string
+        totalPages:
+          type: integer
+          nullable: true
+        totalQuestions:
+          type: integer
+          nullable: true
+        pages:
+          type: array
+          items:
+            $ref: "#/components/schemas/PageInfo"
+        previewQuestions:
+          type: array
+          items:
+            $ref: "#/components/schemas/QuestionDetail"
+      required: [id, examId, paperId, pdfName, year, status, pages, previewQuestions]
+
+    PageInfo:
+      type: object
+      properties:
+        pageNumber:
+          type: integer
+        imageUrl:
+          type: string
+      required: [pageNumber, imageUrl]
+
+    BankCreatedResponse:
+      type: object
+      properties:
+        bankId:
+          type: integer
+        status:
+          type: string
+        message:
+          type: string
+      required: [bankId, status, message]
+
+    QuestionListResponse:
+      type: object
+      properties:
+        questions:
+          type: array
+          items:
+            $ref: "#/components/schemas/QuestionDetail"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+        totalPages:
+          type: integer
+      required: [questions, total, page, limit, totalPages]
+
+    QuestionDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+        bankId:
+          type: integer
+        year:
+          type: integer
+        examId:
+          type: integer
+        paperId:
+          type: integer
+        questionUid:
+          type: string
+        sourcePage:
+          type: integer
+          nullable: true
+        passageId:
+          type: string
+          nullable: true
+        questionText:
+          type: string
+        options:
+          type: object
+          additionalProperties:
+            type: string
+        hasMath:
+          type: boolean
+        mathLatex:
+          type: string
+          nullable: true
+        questionType:
+          type: string
+          nullable: true
+        subject:
+          type: string
+          nullable: true
+        topic:
+          type: string
+          nullable: true
+        difficulty:
+          type: string
+          nullable: true
+        extractionConfidence:
+          type: number
+          nullable: true
+        needsReview:
+          type: boolean
+      required: [id, bankId, year, examId, paperId, questionUid, questionText, options, hasMath, needsReview]
+
+    QuestionStats:
+      type: object
+      properties:
+        total:
+          type: integer
+        bySubject:
+          type: object
+          additionalProperties:
+            type: integer
+        byTopic:
+          type: object
+          additionalProperties:
+            type: integer
+        byYear:
+          type: object
+          additionalProperties:
+            type: integer
+        needsReviewCount:
+          type: integer
+        mathCount:
+          type: integer
+      required: [total, bySubject, byTopic, byYear, needsReviewCount, mathCount]
+
+    SuccessResponse:
+      type: object
+      properties:
+        message:
+          type: string
+      required: [message]
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required: [error]
